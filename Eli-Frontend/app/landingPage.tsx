@@ -73,7 +73,7 @@ export default function LandingPage() {
 
                     <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
                         ELI helps you understand your emotional patterns, providing clarity and guidance through intelligent
-                        journaling and analysis. Your journey to self-awareness starts here.
+                        emotional and friendly conversations.
                     </p>
 
                     {/* Interactive Chat Area */}
@@ -116,20 +116,23 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-40">
                         <Link
                             href="/dashboard"
                             className="bg-gradient-to-r from-yellow-400 to-pink-400 hover:from-yellow-500 hover:to-pink-500 text-white px-8 py-4 rounded-full text-lg shadow-md"
                         >
                             Login to Dashboard
                         </Link>
-
                         <button className="flex items-center text-gray-700 hover:text-gray-900 transition-colors">
                             <Play className="w-5 h-5 mr-2" />
                             Watch the video
                         </button>
                     </div>
+                    <p className="text-xl md:text-4xl mb-8 max-w-3xl mx-auto leading-relaxed bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
+                        Your journey to a greater well-being and peace of mind start here.
+                    </p>
                 </div>
+
             </section>
 
             {/* Features Section */}
