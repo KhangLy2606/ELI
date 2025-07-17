@@ -1,6 +1,6 @@
 ## Getting Started
 
-This guide focuses on setting up the Frontend mobile application.
+This guide focuses on setting up the Frontend webapp application.
 
 ### Prerequisites
 
