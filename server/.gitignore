@@ -1,0 +1,7 @@
+# .gitignore for Node.js server
+
+/node_modules
+.env
+/dist
+/build
+
