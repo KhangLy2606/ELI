@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 
 if (Platform.OS === "web") {
     // Web bundler will pull Tailwind’s generated CSS into the page
-    require("../globals.css");   // adjust the path if _layout.tsx sits deeper
+    require("./globals.css");
 }
 
 export default function RootLayout() {
