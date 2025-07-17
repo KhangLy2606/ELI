@@ -28,23 +28,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Bottom Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-                <div className="flex items-center justify-around py-2">
-                    <button className="flex flex-col items-center py-2 px-4">
-                        <Home className="w-6 h-6 text-blue-500" />
-                        <span className="text-xs text-blue-500 mt-1">home</span>
-                    </button>
-                    <button className="flex flex-col items-center py-2 px-4">
-                        <Bell className="w-6 h-6 text-gray-400" />
-                        <span className="text-xs text-gray-400 mt-1">notifications</span>
-                    </button>
-                    <button className="flex flex-col items-center py-2 px-4">
-                        <Settings className="w-6 h-6 text-gray-400" />
-                        <span className="text-xs text-gray-400 mt-1">settings</span>
-                    </button>
-                </div>
-            </div>
         </div>
     )
 }
