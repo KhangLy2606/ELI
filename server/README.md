@@ -33,7 +33,7 @@ Install all the required npm packages:
 
 ```bash
 npm install
-npm install dotenv
+npm install dotenv express cors morgan bcrypt jsonwebtoken pg
 ````
 
 ## Running the Server
