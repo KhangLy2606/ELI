@@ -79,3 +79,6 @@ The server provides the following RESTful endpoints.
 | :----- | :--------------- | :---------------------------------- |
 | `GET`  | `/`              | Retrieves all chats for the user.   |
 | `GET`  | `/:id`           | Retrieves a single chat by its ID.  |
+| `GET`	 | `/:chatId/analytics`| Retrieves emotion analytics for a specific chat. | 
+| `POST` | `/ingest `          | Ingests a new conversation from Hume AI. | 
+
