@@ -50,7 +50,6 @@ The server will start and listen for incoming requests on the port specified in 
 ## Project Structure
 
   - **`server.js`**: The main entry point of the application. It initializes the Express app, applies middleware, and mounts the API routes.
-  - **`api.js`**: Defines all API routes and contains the core application logic for handling requests.
   - **`config.js`**: Loads and exports configuration variables from the `.env` file.
   - **`database.js`**: Initializes and exports the PostgreSQL connection pool.
   - **`.env`**: Stores secret credentials and environment-specific settings.
