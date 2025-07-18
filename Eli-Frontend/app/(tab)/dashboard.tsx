@@ -1,33 +1,36 @@
 "use client"
 
-import { Home, Bell, Settings } from "lucide-react"
-// CORRECTED IMPORT PATHS
-import MoodStatusDisplay from "../../components/dashboard/MoodStatusDisplay"
-import SummaryCard from "../../components/dashboard/SummaryCard"
-import DashboardNavLink from "../../components/dashboard/DashboardNavLink"
+import { useDashboardData } from "@/hooks/useDashboardData"; // Adjust the import path
+import MoodStatusDisplay from "@/components/dashboard/MoodStatusDisplay";
+import SummaryCard from "@/components/dashboard/SummaryCard";
+import DashboardNavLink from "@/components/dashboard/DashboardNavLink";
 
 export default function Dashboard() {
+    // Call the custom hook to get data and state
+    const { emotionData, isLoading, error } = useDashboardData();
+
     return (
-        <div className="min-h-screen bg-gray-100">
-            {/* Main Content */}
-            <div className="px-6 pt-12 pb-20">
-                {/* Title */}
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-white">
+            <main className="max-w-2xl mx-auto px-4 pt-12 pb-28">
+                <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">
+                    How you're{" "}
+                    <span className="bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">
+                        feeling
+                    </span>
+                </h1>
 
-                {/* Mood Status Display */}
-                <MoodStatusDisplay />
+                {/* The rendering logic remains the same */}
+                {isLoading && <p className="text-center">Loading your data...</p>}
+                {error && <p className="text-center text-red-500">{error}</p>}
+                {emotionData && <MoodStatusDisplay emotionFeatures={emotionData} />}
 
-                {/* Summary Card */}
-                <SummaryCard />
-
-                {/* Navigation Links */}
-                <div className="space-y-0">
-                    <DashboardNavLink label="Mood Trends" onClick={() => console.log("Navigate to Mood Trends")} />
-                    <DashboardNavLink label="View/Edit Notes" onClick={() => console.log("Navigate to View/Edit Notes")} />
-                    <DashboardNavLink label="Notifications" onClick={() => console.log("Navigate to Notifications")} />
+                <div className="space-y-3 mt-8">
+                    <SummaryCard />
+                    <DashboardNavLink label="Mood Trends" />
+                    <DashboardNavLink label="View/Edit Notes" />
+                    <DashboardNavLink label="Notifications" />
                 </div>
-            </div>
-
+            </main>
         </div>
     )
 }

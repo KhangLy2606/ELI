@@ -1,14 +1,13 @@
-// ELI/server/api.js
-// Defines all the API routes for the application.
-
+// server/api/auth.js
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt =require('jsonwebtoken');
-const pool = require('./database'); // Import the database pool
-const { jwtSecret } = require('./config'); // Import the JWT secret from config
+const jwt = require('jsonwebtoken');
+const pool = require('../database');
+const { jwtSecret } = require('../config');
 
 const router = express.Router();
 
+// User Signup
 router.post('/signup', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -25,14 +24,15 @@ router.post('/signup', async (req, res) => {
             user: newUser.rows[0],
         });
     } catch (error) {
-        console.error('Signup Error:', error);
+        console.error(`[POST /api/auth/signup] Error for ${email}:`, error);
         if (error.code === '23505') {
             return res.status(409).json({ message: 'An account with this email already exists.' });
         }
-        res.status(500).json({ message: 'An error occurred on the server.' });
+        res.status(500).json({ message: 'An error occurred during signup.' });
     }
 });
 
+// User Login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -42,10 +42,12 @@ router.post('/login', async (req, res) => {
         const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         const user = userResult.rows[0];
         if (!user) {
+            console.warn(`[POST /api/auth/login] Login attempt for non-existent user: ${email}`);
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
+            console.warn(`[POST /api/auth/login] Invalid password attempt for user: ${email}`);
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
         const token = jwt.sign(
@@ -59,10 +61,9 @@ router.post('/login', async (req, res) => {
             user: { id: user.id, email: user.email },
         });
     } catch (error) {
-        console.error('Login Error:', error);
-        res.status(500).json({ message: 'An error occurred on the server.' });
+        console.error(`[POST /api/auth/login] Server error for ${email}:`, error);
+        res.status(500).json({ message: 'An error occurred during login.' });
     }
 });
 
-// Export the router to be used in the main server.js file
 module.exports = router;
