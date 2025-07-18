@@ -1,0 +1,290 @@
+[
+  {
+    "name": "Admiration",
+    "emoji": "🤩",
+    "category": "Positive",
+    "description": "A feeling of respect and warm approval."
+  },
+  {
+    "name": "Adoration",
+    "emoji": "🥰",
+    "category": "Positive",
+    "description": "Deep love and respect."
+  },
+  {
+    "name": "Aesthetic Appreciation",
+    "emoji": "🙂",
+    "category": "Neutral",
+    "description": "The appreciation of beauty."
+  },
+  {
+    "name": "Amusement",
+    "emoji": "😂",
+    "category": "Positive",
+    "description": "The feeling of finding something funny."
+  },
+  {
+    "name": "Anger",
+    "emoji": "😠",
+    "category": "Negative",
+    "description": "A strong feeling of annoyance, displeasure, or hostility."
+  },
+  {
+    "name": "Anxiety",
+    "emoji": "😟",
+    "category": "Negative",
+    "description": "A feeling of worry, nervousness, or unease."
+  },
+  {
+    "name": "Awe",
+    "emoji": "😲",
+    "category": "Neutral",
+    "description": "A feeling of reverential respect mixed with fear or wonder."
+  },
+  {
+    "name": "Awkwardness",
+    "emoji": "😬",
+    "category": "Negative",
+    "description": "The feeling of being embarrassed or socially inept."
+  },
+  {
+    "name": "Boredom",
+    "emoji": "😑",
+    "category": "Negative",
+    "description": "The state of feeling uninterested in one's surroundings or activities."
+  },
+  {
+    "name": "Calmness",
+    "emoji": "🧘",
+    "category": "Positive",
+    "description": "The state of being free from agitation or excitement."
+  },
+  {
+    "name": "Concentration",
+    "emoji": "🙂",
+    "category": "Neutral",
+    "description": "The action or power of focusing one's attention or mental effort."
+  },
+  {
+    "name": "Confusion",
+    "emoji": "🤔",
+    "category": "Negative",
+    "description": "Lack of understanding; uncertainty."
+  },
+  {
+    "name": "Contemplation",
+    "emoji": "🤔",
+    "category": "Neutral",
+    "description": "The action of looking thoughtfully at something for a long time."
+  },
+  {
+    "name": "Contempt",
+    "emoji": "😒",
+    "category": "Negative",
+    "description": "The feeling that a person or a thing is beneath consideration, worthless, or deserving scorn."
+  },
+  {
+    "name": "Contentment",
+    "emoji": "😌",
+    "category": "Positive",
+    "description": "A state of happiness and satisfaction."
+  },
+  {
+    "name": "Craving",
+    "emoji": "😋",
+    "category": "Neutral",
+    "description": "A powerful desire for something."
+  },
+  {
+    "name": "Desire",
+    "emoji": "😍",
+    "category": "Positive",
+    "description": "A strong feeling of wanting to have something or wishing for something to happen."
+  },
+  {
+    "name": "Determination",
+    "emoji": "😤",
+    "category": "Positive",
+    "description": "The quality of being firmly resolved to do something."
+  },
+  {
+    "name": "Disappointment",
+    "emoji": "😞",
+    "category": "Negative",
+    "description": "Sadness or displeasure caused by the non-fulfillment of one's hopes or expectations."
+  },
+  {
+    "name": "Disgust",
+    "emoji": "🤢",
+    "category": "Negative",
+    "description": "A feeling of revulsion or strong disapproval aroused by something unpleasant or offensive."
+  },
+  {
+    "name": "Distress",
+    "emoji": "😥",
+    "category": "Negative",
+    "description": "Extreme anxiety, sorrow, or pain."
+  },
+  {
+    "name": "Doubt",
+    "emoji": "🤔",
+    "category": "Negative",
+    "description": "A feeling of uncertainty or lack of conviction."
+  },
+  {
+    "name": "Ecstasy",
+    "emoji": "🤩",
+    "category": "Positive",
+    "description": "An overwhelming feeling of great happiness or joyful excitement."
+  },
+  {
+    "name": "Embarrassment",
+    "emoji": "😳",
+    "category": "Negative",
+    "description": "A feeling of self-consciousness, shame, or awkwardness."
+  },
+  {
+    "name": "Empathic Pain",
+    "emoji": "😟",
+    "category": "Negative",
+    "description": "Feeling another person's pain as if it were one's own."
+  },
+  {
+    "name": "Entrancement",
+    "emoji": "😮",
+    "category": "Neutral",
+    "description": "A state of being filled with wonder and delight, holding their entire attention."
+  },
+  {
+    "name": "Envy",
+    "emoji": "😒",
+    "category": "Negative",
+    "description": "A feeling of discontented or resentful longing aroused by someone else's possessions, qualities, or luck."
+  },
+  {
+    "name": "Excitement",
+    "emoji": "🎉",
+    "category": "Positive",
+    "description": "A feeling of great enthusiasm and eagerness."
+  },
+  {
+    "name": "Fear",
+    "emoji": "😨",
+    "category": "Negative",
+    "description": "An unpleasant emotion caused by the belief that someone or something is dangerous, likely to cause pain, or a threat."
+  },
+  {
+    "name": "Guilt",
+    "emoji": "😔",
+    "category": "Negative",
+    "description": "A feeling of having done wrong or failed in an obligation."
+  },
+  {
+    "name": "Horror",
+    "emoji": "😱",
+    "category": "Negative",
+    "description": "An intense feeling of fear, shock, or disgust."
+  },
+  {
+    "name": "Interest",
+    "emoji": "🤔",
+    "category": "Neutral",
+    "description": "The feeling of wanting to know or learn about something or someone."
+  },
+  {
+    "name": "Joy",
+    "emoji": "😄",
+    "category": "Positive",
+    "description": "A feeling of great pleasure and happiness."
+  },
+  {
+    "name": "Love",
+    "emoji": "❤️",
+    "category": "Positive",
+    "description": "An intense feeling of deep affection."
+  },
+  {
+    "name": "Nostalgia",
+    "emoji": "😌",
+    "category": "Neutral",
+    "description": "A sentimental longing or wistful affection for a period in the past."
+  },
+  {
+    "name": "Pain",
+    "emoji": "😫",
+    "category": "Negative",
+    "description": "Highly unpleasant physical sensation caused by illness or injury."
+  },
+  {
+    "name": "Pride",
+    "emoji": "😎",
+    "category": "Positive",
+    "description": "A feeling of deep pleasure or satisfaction derived from one's own achievements."
+  },
+  {
+    "name": "Realization",
+    "emoji": "💡",
+    "category": "Neutral",
+    "description": "An act of becoming fully aware of something as a fact."
+  },
+  {
+    "name": "Relief",
+    "emoji": "😌",
+    "category": "Positive",
+    "description": "A feeling of reassurance and relaxation following release from anxiety or distress."
+  },
+  {
+    "name": "Romance",
+    "emoji": "❤️",
+    "category": "Positive",
+    "description": "A quality or feeling of mystery, excitement, and remoteness from everyday life."
+  },
+  {
+    "name": "Sadness",
+    "emoji": "😢",
+    "category": "Negative",
+    "description": "The condition or quality of being sad."
+  },
+  {
+    "name": "Satisfaction",
+    "emoji": "😊",
+    "category": "Positive",
+    "description": "Fulfillment of one's wishes, expectations, or needs, or the pleasure derived from this."
+  },
+  {
+    "name": "Shame",
+    "emoji": "😳",
+    "category": "Negative",
+    "description": "A painful feeling of humiliation or distress caused by the consciousness of wrong or foolish behavior."
+  },
+  {
+    "name": "Surprise (negative)",
+    "emoji": "😟",
+    "category": "Negative",
+    "description": "A feeling of mild astonishment or shock, in an unpleasant way."
+  },
+  {
+    "name": "Surprise (positive)",
+    "emoji": "😮",
+    "category": "Positive",
+    "description": "A feeling of mild astonishment or shock, in a pleasant way."
+  },
+  {
+    "name": "Sympathy",
+    "emoji": "😔",
+    "category": "Neutral",
+    "description": "Feelings of pity and sorrow for someone else's misfortune."
+  },
+  {
+    "name": "Tiredness",
+    "emoji": "😴",
+    "category": "Negative",
+    "description": "The state of wishing for sleep or rest; weariness."
+  },
+  {
+    "name": "Triumph",
+    "emoji": "🏆",
+    "category": "Positive",
+    "description": "A great victory or achievement."
+  }
+]

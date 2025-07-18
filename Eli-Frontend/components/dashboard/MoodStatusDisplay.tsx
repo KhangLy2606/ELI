@@ -1,20 +1,56 @@
-export default function MoodStatusDisplay() {
+"use client"
+
+import type React from "react"
+import { useRef, useState } from "react"
+import { useEmotionBubbles } from "./mood/emotionalBubble"
+import Bubble from "./mood/bubble"
+import Tooltip from "./mood/tooltip"
+
+interface MoodStatusDisplayProps {
+    emotionFeatures: Record<string, number>
+}
+
+export default function MoodStatusDisplay({ emotionFeatures }: MoodStatusDisplayProps) {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [hoveredBubbleId, setHoveredBubbleId] = useState<string | null>(null)
+    const [isInteracting, setIsInteracting] = useState(false)
+    const mousePos = useRef({ x: -9999, y: -9999 })
+
+    const bubbles = useEmotionBubbles(emotionFeatures, containerRef, mousePos, isInteracting);
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isInteracting) setIsInteracting(true);
+        if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect()
+            mousePos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+        }
+    }
+
+    const handleMouseLeave = () => {
+        mousePos.current = { x: -9999, y: -9999 };
+    }
+
+    const hoveredBubble = bubbles.find(b => b.id === hoveredBubbleId);
+
     return (
-        <div className="relative flex items-center justify-center h-32 mb-6">
-            {/* Sad circle - left */}
-            <div className="absolute left-8 w-20 h-20 bg-blue-300 rounded-full flex items-center justify-center text-sm font-medium text-gray-800 z-10">
-        Sad
+        <div className="relative w-full h-96 md:h-[500px] mb-8 rounded-2xl overflow-hidden">
+            <div
+                ref={containerRef}
+                className="relative w-full h-full"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+            >
+                {bubbles.map((bubble) => (
+                    <Bubble
+                        key={bubble.id}
+                        bubble={bubble}
+                        isHovered={hoveredBubbleId === bubble.id}
+                        onMouseEnter={setHoveredBubbleId}
+                        onMouseLeave={() => setHoveredBubbleId(null)}
+                    />
+                ))}
+                <Tooltip hoveredBubble={hoveredBubble} containerRef={containerRef} />
+            </div>
         </div>
-
-    {/* Angry circle - center (larger) */}
-    <div className="absolute w-24 h-24 bg-red-400 rounded-full flex items-center justify-center text-sm font-medium text-gray-800 z-20">
-        Angry
-        </div>
-
-    {/* Happy circle - right */}
-    <div className="absolute right-8 w-20 h-20 bg-pink-300 rounded-full flex items-center justify-center text-sm font-medium text-gray-800 z-10">
-        Happy
-        </div>
-        </div>
-)
+    )
 }
