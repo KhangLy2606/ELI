@@ -13,8 +13,7 @@ interface BubbleProps {
 const Bubble = memo(({ bubble, isHovered, onMouseEnter, onMouseLeave }: BubbleProps) => {
     return (
         <div
-            key={bubble.id}
-            className={`absolute rounded-full ${bubble.color} bg-opacity-80 backdrop-blur-sm border border-white/30 flex items-center justify-center cursor-pointer transition-transform duration-200 ${
+            className={`absolute rounded-full ${bubble.color} backdrop-blur-sm border border-white/30 flex items-center justify-center cursor-pointer transition-transform duration-200 ${
                 isHovered ? "scale-110 bg-opacity-100 z-10" : ""
             }`}
             style={{

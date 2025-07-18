@@ -46,7 +46,7 @@ export const useEmotionBubbles = (
         // Process the largest bubble
         const [largestName, largestScore] = sortedEmotions[0];
         const largestDetails = getEmotionDetails(largestName);
-        const largestRadius = 20 + (largestScore * 80);
+        const largestRadius = 10 + 75 * Math.sqrt(largestScore);
 
         bubblesData.push({
             id: largestName,
@@ -70,7 +70,7 @@ export const useEmotionBubbles = (
 
         smallerEmotions.forEach(([name, score], index) => {
             const details = getEmotionDetails(name);
-            const radius = 20 + (score * 80);
+            const radius = 10 + 75 * Math.sqrt(score);
             const angle = (2 * Math.PI / numSmaller) * index;
             const x = centerX + orbitalRadius * Math.cos(angle);
             const y = centerY + orbitalRadius * Math.sin(angle);
@@ -113,7 +113,7 @@ export const useEmotionBubbles = (
                             const dyMouse = bubble.y - mousePos.current.y;
                             const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
                             if (distMouse < 150) {
-                                const force = (1 - distMouse / 150) * 0.8;
+                                const force = (1 - distMouse / 150) * 0.05;
                                 bubble.vx += (dxMouse / distMouse) * force;
                                 bubble.vy += (dyMouse / distMouse) * force;
                             }

@@ -22,10 +22,7 @@ export const defaultEmotion: Emotion = {
  * @returns The full Emotion object.
  */
 export function getEmotionDetails(name: string): Emotion {
-    // Find a partial match if the exact name isn't there
-    const key = [...emotionMap.keys()].find(k => name.includes(k));
-    const details = key ? emotionMap.get(key) : undefined;
+    const details = emotionMap.get(name);
 
-    // Return found details or the default
     return details || { ...defaultEmotion, name };
 }
