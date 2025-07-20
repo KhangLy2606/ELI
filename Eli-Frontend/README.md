@@ -1,50 +1,44 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Features
 
-## Get started
+  - **Modern Landing Page:** A visually engaging entry point with smooth animations and clear calls-to-action.
+  - **User Authentication:** Secure sign-up and login flows.
+  - **Responsive Dashboard:** A sidebar-based navigation system for accessing user data and settings.
+  - **Emotional Insights:** Components for visualizing mood trends and emotional patterns.
 
-1. Install dependencies
+-----
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+  - **Framework:** [Expo](https://expo.dev/)
+  - **UI Library:** [React Native](https://reactnative.dev/)
+  - **Routing:** [Expo Router](https://docs.expo.dev/router/introduction/)
+  - **Styling:** [Tailwind CSS](https://tailwindcss.com/) (via NativeWind)
+  - **Language:** [TypeScript](https://www.typescriptlang.org/)
+  - **Animation:** [Framer Motion](https://www.framer.com/motion/)
 
-   ```bash
-   npx expo start
-   ```
+-----
 
-In the output, you'll find options to open the app in a
+## Getting Started
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+To get the project running on your local machine, follow these steps:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+#### 1\. Installation
 
-## Get a fresh project
-
-When you're ready, run:
+Install the dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+#### 2\. Running the App
 
-## Learn more
+Start the development server with:
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx expo start
+```
+-----
+  - [Expo Documentation](https://docs.expo.dev/)
+  - [Expo Router Documentation](https://docs.expo.dev/router/introduction/)
+  - [React Native Documentation](https://reactnative.dev/docs/getting-started)
