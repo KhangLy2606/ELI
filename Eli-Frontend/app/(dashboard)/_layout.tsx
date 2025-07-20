@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, Suspense } from "react"
-import { Menu, PanelLeft, Search, Bell, Settings, Home } from "lucide-react"
+import { Menu, PanelLeft, Search, Bell, Settings, Home, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -10,21 +10,28 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-// Import your actual screen components
 import DashboardScreen from "./dashboard"
 import SettingsScreen from "./settings"
+import ChatView from "./chat"
 
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const [activeView, setActiveView] = useState("dashboard")
+        const [activeView, setActiveView] = useState("dashboard")
 
+    // Add the new Chat item to the sidebar navigation
     const sidebarItems = [
         {
             title: "Dashboard",
             icon: <Home className="h-5 w-5" />,
             key: "dashboard",
             isActive: activeView === "dashboard",
+        },
+        {
+            title: "Chat",
+            icon: <MessageCircle className="h-5 w-5" />,
+            key: "chat",
+            isActive: activeView === "chat",
         },
         {
             title: "Settings",
@@ -38,6 +45,8 @@ export default function DashboardLayout() {
         switch (activeView) {
             case "dashboard":
                 return "Dashboard"
+            case "chat":
+                return "Chat with ELI"
             case "settings":
                 return "Settings"
             default:
@@ -111,7 +120,7 @@ export default function DashboardLayout() {
                         <button className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-medium hover:bg-gray-100/50">
                             <div className="flex items-center gap-3">
                                 <Avatar className="h-6 w-6">
-                                    <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                                    <AvatarImage src="https://placehold.co/32x32/E2E8F0/4A5568?text=AD" alt="User" />
                                     <AvatarFallback className="bg-gradient-to-br from-yellow-400 to-pink-400 text-xs text-white">
                                         AD
                                     </AvatarFallback>
@@ -182,7 +191,7 @@ export default function DashboardLayout() {
                         <button className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-medium hover:bg-gray-100/50">
                             <div className="flex items-center gap-3">
                                 <Avatar className="h-6 w-6">
-                                    <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                                    <AvatarImage src="https://placehold.co/32x32/E2E8F0/4A5568?text=AD" alt="User" />
                                     <AvatarFallback className="bg-gradient-to-br from-yellow-400 to-pink-400 text-xs text-white">
                                         AD
                                     </AvatarFallback>
@@ -220,7 +229,7 @@ export default function DashboardLayout() {
                                 <Bell className="h-5 w-5" />
                             </Button>
                             <Avatar className="h-8 w-8 border-2 border-yellow-400/20">
-                                <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                                <AvatarImage src="https://placehold.co/32x32/E2E8F0/4A5568?text=AD" alt="User" />
                                 <AvatarFallback className="bg-gradient-to-br from-yellow-400 to-pink-400 text-sm text-white">
                                     AD
                                 </AvatarFallback>
@@ -230,8 +239,10 @@ export default function DashboardLayout() {
                 </header>
 
                 <main className="flex-1 p-4 md:p-6">
+                    {/* Conditionally render the active view */}
                     <Suspense fallback={<div>Loading...</div>}>
                         {activeView === 'dashboard' && <DashboardScreen />}
+                        {activeView === 'chat' && <ChatView />}
                         {activeView === 'settings' && <SettingsScreen />}
                     </Suspense>
                 </main>
