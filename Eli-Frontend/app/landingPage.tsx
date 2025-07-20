@@ -14,23 +14,29 @@ import {
     Mic,
 } from "lucide-react"
 import { Link } from "expo-router"
-import { motion } from "framer-motion"
 
-// Import existing background components
-import StarField from "../components/landingPage/starField"
-import AuroraBackground from "../components/landingPage/auroraBackground"
-// Import the new, separated background component
-import BackgroundPaths from "../components/landingPage/backgroundPaths"
-
+import StarField from "@/components/landingPage/starField"
+import AuroraBackground from "@/components/landingPage/auroraBackground"
+import BackgroundPaths from "@/components/landingPage/backgroundPaths"
+import MouseMoveEffect from "@/components/landingPage/mousemoveEffect"
 
 export default function LandingPage() {
+    const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        e.preventDefault();
+        const element = document.querySelector(href);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 text-gray-800 overflow-x-hidden">
             {/* Background Effects */}
             <AuroraBackground />
             <StarField />
             <BackgroundPaths />
-
+            <MouseMoveEffect />
 
             {/* Navigation (z-50 makes it stay on top) */}
             <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -43,12 +49,12 @@ export default function LandingPage() {
 
                         {/* Navigation Links */}
                         <div className="hidden md:flex items-center space-x-8">
-                            <Link href="#overview" className="text-gray-600 hover:text-gray-800 transition-colors">
+                            <a href="#overview" onClick={(e) => handleScroll(e, '#overview')} className="text-gray-300 hover:text-gray-800 transition-colors">
                                 Overview
-                            </Link>
-                            <Link href="#features" className="text-gray-600 hover:text-gray-800 transition-colors">
+                            </a>
+                            <a href="#features" onClick={(e) => handleScroll(e, '#features')} className="text-gray-300 hover:text-gray-800 transition-colors">
                                 Features
-                            </Link>
+                            </a>
                             <Link href="/pricing" className="text-gray-600 hover:text-gray-1000 transition-colors">
                                 Pricing
                             </Link>
@@ -126,7 +132,7 @@ export default function LandingPage() {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-40">
                         <Link
-                            href="/dashboard"
+                            href="/login"
                             className="bg-gradient-to-r from-yellow-400 to-pink-400 hover:from-yellow-500 hover:to-pink-500 text-white px-8 py-4 rounded-full text-lg shadow-md"
                         >
                             Login to Dashboard
