@@ -2,7 +2,7 @@ import { ChevronRight } from "lucide-react"
 
 export default function SummaryCard() {
     return (
-        <div className="bg-gradient-to-br from-white to-purple-50 rounded-2xl p-4 mb-6 shadow-lg border border-purple-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 shadow-sm">
             <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                     Summary
