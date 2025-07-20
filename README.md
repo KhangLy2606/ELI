@@ -12,7 +12,7 @@ This guide focuses on setting up the Frontend webapp application.
 
 1.  Clone the repository to your local machine:
     ```sh
-    git clone [https://github.com/KhangLy2606/ELI.git](https://github.com/KhangLy2606/ELI.git)
+    git clone https://github.com/KhangLy2606/ELI.git
     ```
 2.  Navigate to the frontend project directory:
     ```sh
