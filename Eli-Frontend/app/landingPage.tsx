@@ -14,8 +14,14 @@ import {
     Mic,
 } from "lucide-react"
 import { Link } from "expo-router"
+import { motion } from "framer-motion"
+
+// Import existing background components
 import StarField from "../components/landingPage/starField"
 import AuroraBackground from "../components/landingPage/auroraBackground"
+// Import the new, separated background component
+import BackgroundPaths from "../components/landingPage/backgroundPaths"
+
 
 export default function LandingPage() {
     return (
@@ -23,8 +29,10 @@ export default function LandingPage() {
             {/* Background Effects */}
             <AuroraBackground />
             <StarField />
+            <BackgroundPaths />
 
-            {/* Navigation */}
+
+            {/* Navigation (z-50 makes it stay on top) */}
             <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -61,7 +69,7 @@ export default function LandingPage() {
                 </div>
             </nav>
 
-            {/* Hero Section */}
+            {/* Hero Section (relative z-10 keeps it above the background) */}
             <section className="min-h-screen flex items-center justify-center relative z-10 px-6">
                 <div className="text-center max-w-4xl mx-auto">
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
