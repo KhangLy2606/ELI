@@ -8,11 +8,9 @@ import AuroraBackground from "../components/landingPage/auroraBackground";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
-    // State for form inputs remains in the component
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    // Get login function and state from the custom hook
     const { login, isLoading, error } = useAuth();
 
     const handleLogin = (e: React.FormEvent) => {

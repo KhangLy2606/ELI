@@ -8,14 +8,12 @@ import AuroraBackground from "../components/landingPage/auroraBackground";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Signup() {
-    // State for form inputs
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    // Get signup function and state from the hook
     const { signup, isLoading, error, success } = useAuth();
-    const [clientError, setClientError] = useState(''); // For client-side errors like password mismatch
+    const [clientError, setClientError] = useState('');
 
     const handleSignup = (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,7 +25,7 @@ export default function Signup() {
             return;
         }
 
-        signup(email, password); // Call the signup function from the hook
+        signup(email, password);
     };
 
     return (

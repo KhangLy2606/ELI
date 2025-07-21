@@ -1,12 +1,11 @@
 "use client"
 
-import { useDashboardData } from "@/hooks/useDashboardData"; // Adjust the import path
+import { useDashboardData } from "@/hooks/useDashboardData";
 import MoodStatusDisplay from "@/components/dashboard/MoodStatusDisplay";
 import SummaryCard from "@/components/dashboard/SummaryCard";
 import DashboardNavLink from "@/components/dashboard/DashboardNavLink";
 
 export default function Dashboard() {
-    // Call the custom hook to get data and state
     const { emotionData, isLoading, error } = useDashboardData();
 
     return (
