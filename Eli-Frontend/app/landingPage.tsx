@@ -238,7 +238,7 @@ export default function LandingPage() {
                     </h2>
 
                     <Link
-                        href="/login"
+                        href="/signup/1-account"
                         className="inline-block bg-gradient-to-r from-yellow-400 to-pink-400 hover:from-yellow-500 hover:to-pink-500 text-white px-12 py-4 rounded-full text-xl shadow-md"
                     >
                         Sign Up Now
