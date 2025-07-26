@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../database');
 const { jwtSecret } = require('../config');
-
+const { authenticateToken, handleTokenRefresh } = require('../middleware/authJWT');
 const router = express.Router();
 
 router.post('/signup', async (req, res) => {
@@ -82,15 +82,16 @@ router.post('/signup', async (req, res) => {
 
         await client.query('COMMIT');
 
-        const token = jwt.sign(
-            { userId: newUser.id, email: newUser.email },
-            jwtSecret,
-            { expiresIn: '1h' }
-        );
+        const payload = { userId: user.id, email: user.email };
+
+        const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '15m' }); // e.g., 15 minutes
+
+        const refreshToken = jwt.sign(payload, jwtRefreshSecret, { expiresIn: '7d' }); // e.g., 7 days
 
         res.status(201).json({
             message: 'User and profile created successfully!',
-            token,
+            token: accessToken,
+            refreshToken: refreshToken,
             user: newUser,
         });
 
@@ -142,5 +143,5 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ message: 'An error occurred during login.' });
     }
 });
-
+router.post('/refresh', handleTokenRefresh);
 module.exports = router;

@@ -3,14 +3,18 @@ const { WebSocket } = require("ws");
 const { v4: uuidv4 } = require("uuid");
 const pool = require("../database");
 
-// Initialize Hume SDK (server‑side).
+// Initialize Hume SDK (server-side).
 const hume = new HumeClient({
     apiKey: process.env.HUME_API_KEY,
-    secretKey: process.env.HUME_SECRET_KEY, // optional
+    secretKey: process.env.HUME_SECRET_KEY,
 });
 
-
-
+/**
+ * Simulates a user conversation for testing purposes.
+ * @param {object} socket - The Hume WebSocket connection.
+ * @param {object} dbClient - The database client.
+ * @param {string} chatId - The ID of the chat to add events to.
+ */
 async function simulateChat(socket, dbClient, chatId) {
     const script = [
         "Hi EVI, how are you today?",
@@ -21,8 +25,8 @@ async function simulateChat(socket, dbClient, chatId) {
 
     for (const line of script) {
         await dbClient.query(
-            `INSERT INTO chat_events (id, chat_id, timestamp, role, type, message_text)
-             VALUES ($1,$2,NOW(),'USER','USER_MESSAGE',$3)`,
+            `INSERT INTO chat_events (id, chat_id, "timestamp", role, type, message_text)
+             VALUES ($1, $2, NOW(), 'user', 'user_message', $3)`,
             [uuidv4(), chatId, line]
         );
         socket.sendUserInput(line);
@@ -30,7 +34,11 @@ async function simulateChat(socket, dbClient, chatId) {
     }
 }
 
-
+/**
+ * Handles a new WebSocket connection for a real-time chat session.
+ * @param {object} clientWs - The client's WebSocket connection.
+ * @param {string} userId - The authenticated user's ID.
+ */
 async function handleConnection(clientWs, userId) {
     console.log(`[RealtimeChatService] Connection for user ${userId}`);
 
@@ -40,129 +48,124 @@ async function handleConnection(clientWs, userId) {
     let humeSocket;
 
     try {
-        //  Connect to Hume
+        console.log('[RealtimeChatService] Step 1: Connecting to Hume API...');
         humeSocket = await hume.empathicVoice.chat.connect();
         await humeSocket.tillSocketOpen();
-
-        const SIM_MODE = process.env.SIMULATE_CHAT === "true";
-        // Create DB entries
+        console.log('[RealtimeChatService] Step 1 Complete: Hume API connected.');
+        console.log('[RealtimeChatService] Step 2: Creating database entries...');
         await dbClient.query("BEGIN");
+
+        const profileResult = await dbClient.query('SELECT id FROM profiles WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [userId]);
+
+        if (profileResult.rows.length === 0) {
+            throw new Error(`No profile found for user ${userId}`);
+        }
+        const profileId = profileResult.rows[0].id;
+
         chatGroupId = (
             await dbClient.query(
                 `INSERT INTO chat_groups (id, first_start_timestamp, most_recent_start_timestamp, num_chats, active)
-                 VALUES ($1,NOW(),NOW(),1,TRUE) RETURNING id`,
+                 VALUES ($1, NOW(), NOW(), 1, TRUE) RETURNING id`,
                 [uuidv4()]
             )
         ).rows[0].id;
 
         chatId = (
             await dbClient.query(
-                `INSERT INTO chats (id, chat_group_id, user_id, status, start_timestamp)
-                 VALUES ($1,$2,$3,'ACTIVE',NOW()) RETURNING id`,
-                [uuidv4(), chatGroupId, userId]
+                `INSERT INTO chats (id, chat_group_id, profile_id, status, start_timestamp)
+                 VALUES ($1, $2, $3, 'ACTIVE', NOW()) RETURNING id`,
+                [uuidv4(), chatGroupId, profileId]
             )
         ).rows[0].id;
 
         await dbClient.query("COMMIT");
-        console.log(`[Database] Chat ${chatId} ready (group ${chatGroupId}).`);
-
-        if (SIM_MODE) simulateChat(humeSocket, dbClient, chatId).catch(console.error);
+        console.log(`[RealtimeChatService] Step 2 Complete: Chat ${chatId} ready for profile ${profileId}.`);
+        console.log('[RealtimeChatService] Step 3: Setting up message listeners...');
 
         // Browser → Server → Hume
         clientWs.on("message", async (raw) => {
             const text = raw.toString();
-            await dbClient.query(
-                `INSERT INTO chat_events (id, chat_id, timestamp, role, type, message_text)
-                 VALUES ($1,$2,NOW(),'USER','USER_MESSAGE',$3)`,
-                [uuidv4(), chatId, text]
-            );
-            if (humeSocket.readyState === WebSocket.OPEN) humeSocket.sendUserInput(text);
+            console.log(`[Client → Hume] Forwarding message: ${text}`);
+            if (humeSocket.readyState === WebSocket.OPEN) {
+                humeSocket.sendUserInput(text);
+            }
         });
 
         // Hume → Server → Browser
         humeSocket.on("message", async (msg) => {
             if (clientWs.readyState !== clientWs.OPEN) return;
-            if (msg.type === "assistant_message") {
-                await dbClient.query(
-                    `INSERT INTO chat_events (id, chat_id, timestamp, role, type, message_text, emotion_features)
-                     VALUES ($1,$2,NOW(),'AGENT','AGENT_MESSAGE',$3,$4::jsonb)`,
-                    [uuidv4(), chatId, msg.message.content, msg.models?.prosody?.scores || {}]
-                );
-            }
             clientWs.send(JSON.stringify(msg));
-        });
-
-        // Keep function alive until either socket closes
-        await new Promise((resolve) => {
-            let settled = false;
-            const once = () => {
-                if (!settled) {
-                    settled = true;
-                    resolve();
+            try {
+                if (msg.type === "user_message") {
+                    await dbClient.query(
+                        `INSERT INTO chat_events (id, chat_id, "timestamp", role, type, message_text, emotion_features)
+                         VALUES ($1, $2, NOW(), 'user', 'user_message', $3, $4::jsonb)`,
+                        [uuidv4(), chatId, msg.message.content, msg.models?.prosody?.scores || {}]
+                    );
+                } else if (msg.type === "assistant_message") {
+                    await dbClient.query(
+                        `INSERT INTO chat_events (id, chat_id, "timestamp", role, type, message_text, emotion_features)
+                         VALUES ($1, $2, NOW(), 'assistant', 'assistant_message', $3, $4::jsonb)`,
+                        [uuidv4(), chatId, msg.message.content, msg.models?.prosody?.scores || {}]
+                    );
                 }
-            };
-            clientWs.once ? clientWs.once("close", once) : clientWs.on("close", once);
-            humeSocket.on("close", once);
-            humeSocket.on("error", once);
-            clientWs.on("error", once);
-
+            } catch (dbError) {
+                console.error("[RealtimeChatService] Failed to insert chat event:", dbError);
+            }
         });
+        console.log('[RealtimeChatService] Step 3 Complete: Message listeners are active.');
+        console.log('[RealtimeChatService] Step 4: Waiting for connection to close...');
+        await new Promise((resolve, reject) => {
+            const once = (source, event, details) => {
+                console.log(`[RealtimeChatService] Event '${event}' from ${source}.`, details);
+                resolve();
+            };
+
+            clientWs.once('close', (code, reason) => once('clientWs', 'close', { code, reason: reason?.toString() ?? 'No reason given' }));
+            clientWs.once('error', (err) => once('clientWs', 'error', err.message));
+
+            humeSocket.on('close', (code, reason) => once('humeSocket', 'close', { code, reason: reason?.toString() ?? 'No reason given' }));
+            humeSocket.on('error', (err) => once('humeSocket', 'error', err.message));
+        });
+
     } catch (err) {
-        console.error("[RealtimeChatService] Error:", err);
+        console.error("[RealtimeChatService] An error occurred in the main try block:", err);
         try {
             await dbClient.query("ROLLBACK");
-        } catch {}
+        } catch (rollbackErr) {
+            console.error("[RealtimeChatService] Error rolling back transaction:", rollbackErr);
+        }
         if (clientWs.readyState === clientWs.OPEN) {
-            clientWs.send(JSON.stringify({ type: "error", message: "Server error" }));
+            clientWs.send(JSON.stringify({ type: "error", message: "Server error during chat initialization." }));
         }
-    }
+    } finally {
+        console.log(`[RealtimeChatService] Cleaning up resources for user ${userId}`);
 
-    finally {
-        console.log(`[RealtimeChatService] Cleaning up for user ${userId}`);
-
-        // Gracefully close Hume socket
-        try {
-            if (humeSocket && humeSocket.readyState === WebSocket.OPEN) {
-                humeSocket.close();
-            }
-        } catch (err) {
-            console.error("[RealtimeChatService] Error closing Hume socket:", err);
+        if (humeSocket && humeSocket.readyState === WebSocket.OPEN) {
+            console.log('[RealtimeChatService] Closing Hume socket.');
+            humeSocket.close();
         }
 
-        // Update chat status
         if (chatId) {
-            try {
-                await dbClient.query(
-                    `UPDATE chats SET status='COMPLETE', end_timestamp=NOW() WHERE id=$1`,
-                    [chatId]
-                );
-            } catch (err) {
-                console.error("[RealtimeChatService] Error updating chat status:", err);
-            }
+            await dbClient.query(
+                `UPDATE chats SET status='COMPLETE', end_timestamp=NOW() WHERE id=$1`,
+                [chatId]
+            ).catch(err => console.error("[RealtimeChatService] Error updating chat status:", err));
         }
 
-        // Update chat group status
         if (chatGroupId) {
-            try {
-                await dbClient.query(
-                    `UPDATE chat_groups SET active=FALSE, updated_at=NOW() WHERE id=$1`,
-                    [chatGroupId]
-                );
-            } catch (err) {
-                console.error("[RealtimeChatService] Error updating chat group:", err);
-            }
+            await dbClient.query(
+                `UPDATE chat_groups SET active=FALSE, updated_at=NOW() WHERE id=$1`,
+                [chatGroupId]
+            ).catch(err => console.error("[RealtimeChatService] Error updating chat group:", err));
         }
 
-        // ALWAYS release the database client
         dbClient.release();
+        console.log('[RealtimeChatService] Database client released.');
 
-        // Gracefully close client socket
-        try {
-            if (clientWs.readyState === clientWs.OPEN) {
-                clientWs.close();
-            }
-        } catch (err) {
-            console.error("[RealtimeChatService] Error closing client socket:", err);
+        if (clientWs.readyState === clientWs.OPEN) {
+            console.log('[RealtimeChatService] Closing client socket.');
+            clientWs.close();
         }
     }
 }
