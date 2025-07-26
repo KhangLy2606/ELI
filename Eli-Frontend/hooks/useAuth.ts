@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import type { SignupFormData } from '@/context/signupContext';
+import { useAuthContext } from '@/context/authContext';
 
 const API_BASE_URL = 'http://localhost:3001';
 
@@ -10,14 +11,11 @@ const API_BASE_URL = 'http://localhost:3001';
  */
 export function useAuth() {
     const router = useRouter();
+    const { login: contextLogin } = useAuthContext();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    /**
-     * Handles user login.
-     * This function remains unchanged.
-     */
     const login = async (email, password) => {
         setIsLoading(true);
         setError(null);
@@ -31,9 +29,9 @@ export function useAuth() {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Failed to login.');
-            // Assuming token-based auth
-            localStorage.setItem("token", data.token);
+            await contextLogin(data.token);
             router.push('/dashboard');
+
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unknown error occurred.');
         } finally {
@@ -41,19 +39,10 @@ export function useAuth() {
         }
     };
 
-    /**
-     * Handles the complete multi-step signup process.
-     * It sends all form data collected in the context to the backend.
-     * The backend should be prepared to receive this object, create a 'users' record,
-     * and then create an associated 'profiles' record.
-     * @param formData The complete signup form data object.
-     */
     const signup = async (formData: SignupFormData) => {
         setIsLoading(true);
         setError(null);
         setSuccess(false);
-
-        console.log('Submitting signup data:', formData);
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
@@ -68,9 +57,11 @@ export function useAuth() {
             }
 
             if (data.token) {
-                localStorage.setItem("token", data.token);
+
+                await contextLogin(data.token);
             }
             setSuccess(true);
+            router.push('/dashboard')
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';

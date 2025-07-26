@@ -5,7 +5,7 @@ import { Link } from "expo-router";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import StarField from "../components/landingPage/starField";
 import AuroraBackground from "../components/landingPage/auroraBackground";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
     const [email, setEmail] = useState('');

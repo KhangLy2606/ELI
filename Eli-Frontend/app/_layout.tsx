@@ -1,6 +1,7 @@
 // app/_layout.tsx
 import { Stack } from "expo-router"
 import { Platform } from "react-native"
+import { AuthProvider } from '@/context/authContext';
 import "./globals.css"
 import ClientLayout from "./(dashboard)/_layout"
 
@@ -12,6 +13,7 @@ if (Platform.OS === "web") {
 
 export default function RootLayout() {
     return (
+        <AuthProvider>
         <Stack>
             <Stack.Screen name="landingPage" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
@@ -20,5 +22,6 @@ export default function RootLayout() {
             <Stack.Screen name="about" options={{ headerShown: false }} />
             <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
         </Stack>
-    )
+    </AuthProvider>
+    );
 }

@@ -10,7 +10,8 @@ const jwt = require('jsonwebtoken');
 
 const apiRoutes = require('./api');
 const { jwtSecret } = require('./config');
-const { handleConnection } = require('./services/rtchatService');
+// CHANGE: Point to the new unified EVI service
+const { handleConnection } = require('./services/eviService');
 
 const app = express();
 const port = 3001;
@@ -28,6 +29,7 @@ const wss = new WebSocketServer({ noServer: true });
 server.on('upgrade', (request, socket, head) => {
     const { pathname } = url.parse(request.url);
 
+    // All real-time connections will now go through this single endpoint
     if (pathname === '/ws') {
         wss.handleUpgrade(request, socket, head, (ws) => {
             wss.emit('connection', ws, request);
@@ -47,6 +49,7 @@ wss.on('connection', (ws, req) => {
     }
 
     try {
+        // Verify the JWT to get the user's ID
         const payload = jwt.verify(token, jwtSecret);
         const { userId } = payload;
 
@@ -54,6 +57,7 @@ wss.on('connection', (ws, req) => {
             throw new Error('Invalid token payload');
         }
 
+        // Pass the connection to our new unified handler
         handleConnection(ws, userId);
 
     } catch (error) {

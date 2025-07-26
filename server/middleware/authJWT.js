@@ -1,6 +1,5 @@
 // server/middleware/authJWT.js
 const jwt = require('jsonwebtoken');
-// MODIFICATION: You'll need to add jwtRefreshSecret to your config file.
 const { jwtSecret, jwtRefreshSecret } = require('../config');
 
 /**
@@ -39,10 +38,8 @@ const handleTokenRefresh = (req, res) => {
             console.error('Refresh Token Verification Error:', err.message);
             return res.status(403).json({ message: 'Forbidden: Invalid or expired refresh token.' });
         }
-
         const payload = { userId: user.userId, email: user.email };
         const newAccessToken = jwt.sign(payload, jwtSecret, { expiresIn: '15m' });
-
         res.json({
             token: newAccessToken
         });
@@ -52,5 +49,5 @@ const handleTokenRefresh = (req, res) => {
 
 module.exports = {
     authenticateToken,
-    handleTokenRefresh, // MODIFICATION: Export the new handler
+    handleTokenRefresh,
 };
