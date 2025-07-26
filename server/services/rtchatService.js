@@ -104,6 +104,8 @@ async function handleConnection(clientWs, userId) {
             clientWs.once ? clientWs.once("close", once) : clientWs.on("close", once);
             humeSocket.on("close", once);
             humeSocket.on("error", once);
+            clientWs.on("error", once);
+
         });
     } catch (err) {
         console.error("[RealtimeChatService] Error:", err);
@@ -113,26 +115,55 @@ async function handleConnection(clientWs, userId) {
         if (clientWs.readyState === clientWs.OPEN) {
             clientWs.send(JSON.stringify({ type: "error", message: "Server error" }));
         }
-    } finally {
+    }
+
+    finally {
         console.log(`[RealtimeChatService] Cleaning up for user ${userId}`);
 
-        if (humeSocket && humeSocket.readyState === WebSocket.OPEN) humeSocket.close();
+        // Gracefully close Hume socket
+        try {
+            if (humeSocket && humeSocket.readyState === WebSocket.OPEN) {
+                humeSocket.close();
+            }
+        } catch (err) {
+            console.error("[RealtimeChatService] Error closing Hume socket:", err);
+        }
 
+        // Update chat status
         if (chatId) {
-            await dbClient.query(
-                `UPDATE chats SET status='COMPLETE', end_timestamp=NOW() WHERE id=$1`,
-                [chatId]
-            );
-        }
-        if (chatGroupId) {
-            await dbClient.query(
-                `UPDATE chat_groups SET active=FALSE, updated_at=NOW() WHERE id=$1`,
-                [chatGroupId]
-            );
+            try {
+                await dbClient.query(
+                    `UPDATE chats SET status='COMPLETE', end_timestamp=NOW() WHERE id=$1`,
+                    [chatId]
+                );
+            } catch (err) {
+                console.error("[RealtimeChatService] Error updating chat status:", err);
+            }
         }
 
+        // Update chat group status
+        if (chatGroupId) {
+            try {
+                await dbClient.query(
+                    `UPDATE chat_groups SET active=FALSE, updated_at=NOW() WHERE id=$1`,
+                    [chatGroupId]
+                );
+            } catch (err) {
+                console.error("[RealtimeChatService] Error updating chat group:", err);
+            }
+        }
+
+        // ALWAYS release the database client
         dbClient.release();
-        if (clientWs.readyState === clientWs.OPEN) clientWs.close();
+
+        // Gracefully close client socket
+        try {
+            if (clientWs.readyState === clientWs.OPEN) {
+                clientWs.close();
+            }
+        } catch (err) {
+            console.error("[RealtimeChatService] Error closing client socket:", err);
+        }
     }
 }
 
