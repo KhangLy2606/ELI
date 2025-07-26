@@ -115,20 +115,17 @@ async function handleConnection(clientWs, userId) {
         });
         console.log('[RealtimeChatService] Step 3 Complete: Message listeners are active.');
         console.log('[RealtimeChatService] Step 4: Waiting for connection to close...');
-        await new Promise((resolve) => {
-            let settled = false;
-            const once = (source, event, ...args) => {
-                if (!settled) {
-                    console.log(`[RealtimeChatService] Promise resolving due to '${event}' event from ${source}.`, ...args);
-                    settled = true;
-                    resolve();
-                }
+        await new Promise((resolve, reject) => {
+            const once = (source, event, details) => {
+                console.log(`[RealtimeChatService] Event '${event}' from ${source}.`, details);
+                resolve();
             };
 
-            clientWs.once('close', (code, reason) => once('clientWs', 'close', { code, reason: reason.toString() }));
-            clientWs.once('error', (err) => once('clientWs', 'error', err));
-            humeSocket.on('close', (code, reason) => once('humeSocket', 'close', { code, reason: reason.toString() }));
-            humeSocket.on('error', (err) => once('humeSocket', 'error', err));
+            clientWs.once('close', (code, reason) => once('clientWs', 'close', { code, reason: reason?.toString() ?? 'No reason given' }));
+            clientWs.once('error', (err) => once('clientWs', 'error', err.message));
+
+            humeSocket.on('close', (code, reason) => once('humeSocket', 'close', { code, reason: reason?.toString() ?? 'No reason given' }));
+            humeSocket.on('error', (err) => once('humeSocket', 'error', err.message));
         });
 
     } catch (err) {
