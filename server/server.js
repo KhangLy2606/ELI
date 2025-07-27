@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken');
 
 const apiRoutes = require('./api');
 const { jwtSecret } = require('./config');
-const { handleConnection } = require('./services/rtchatService');
+const { handleConnection } = require('./services/eviService');
 
 const app = express();
 const port = 3001;
