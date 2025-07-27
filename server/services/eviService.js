@@ -2,6 +2,7 @@
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../database');
+const { ChatStatus, EventRole, EventType } = require('../constants/dbEnums');
 
 /**
  * Parses a message from Hume's WebSocket to fit the chat_events schema.
@@ -9,40 +10,32 @@ const pool = require('../database');
  * @returns {object | null} A structured object for DB insertion, or null if the event should be skipped.
  */
 const parseHumeEventForDb = (humeMessage) => {
-    const { type, message, models, tool_call, error } = humeMessage;
+    const { type, message, models, tool_call } = humeMessage;
 
-    // Determine the role of the event originator.
-    let role = humeMessage.role || 'USER';
-    if (role === 'USER' || role === 'assistant' ) {
-    } else {
-        role = 'USER';
-    }
-
-    // Map Hume event types to your database 'event_type_enum'.
+    let role;
     let dbType;
-    let messageText = null;
+    let messageText = message?.content || null;
 
     switch (type) {
         case 'user_message':
+            role = EventRole.USER;
+            dbType = EventType.USER_MESSAGE;
+            break;
         case 'assistant_message':
-            dbType = 'message';
-            messageText = message?.content;
+            role = EventRole.AGENT;
+            dbType = EventType.AGENT_MESSAGE;
             break;
         case 'tool_call':
-            dbType = 'tool_call';
+            role = EventRole.AGENT;
+            dbType = EventType.TOOL_CALL;
             break;
         case 'error':
-            dbType = 'error';
-            messageText = error?.message || 'An unknown error occurred.';
-            break;
         case 'user_interruption':
         case 'assistant_end':
         case 'audio_output':
-            // These are important events but may not need to be logged as distinct chat_events
-            // depending on desired granularity. We will skip them for now to avoid clutter.
+            // These events are not mapped in dbEnums.js or are not needed for logging.
             return null;
         default:
-            // Skip logging other event types like 'ping', 'chat_metadata', etc.
             return null;
     }
 
@@ -134,8 +127,8 @@ const handleConnection = async (clientWs, userId) => {
 
                     chatId = (await dbClient.query(
                         `INSERT INTO chats (id, chat_group_id, profile_id, config_id, status, start_timestamp, custom_session_id, metadata)
-                         VALUES ($1, $2, $3, $4, 'ACTIVE', NOW(), $5, $6) RETURNING id`,
-                        [uuidv4(), chatGroupId, profile_id, config_id, custom_session_id, { modality }]
+                         VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7) RETURNING id`,
+                        [uuidv4(), chatGroupId, profile_id, config_id, ChatStatus.ACTIVE, custom_session_id, { modality }]
                     )).rows[0].id;
 
                     await dbClient.query("COMMIT");
@@ -225,7 +218,7 @@ const handleConnection = async (clientWs, userId) => {
             humeSocket.close();
         }
         if (chatId) {
-            await dbClient.query(`UPDATE chats SET status = 'COMPLETE', end_timestamp = NOW() WHERE id = $1`, [chatId])
+            await dbClient.query(`UPDATE chats SET status = $1, end_timestamp = NOW() WHERE id = $2`, [ChatStatus.COMPLETE, chatId])
                 .catch(err => console.error("[EviService] Error updating chat status:", err));
         }
         if (chatGroupId) {
