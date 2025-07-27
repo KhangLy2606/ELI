@@ -96,7 +96,7 @@ const handleConnection = async (clientWs, userId) => {
 
     // 1. Listen for messages from the client
     clientWs.on('message', async (message) => {
-        // If humeSocket is not yet created, this must be the initial configuration message.
+        console.log(`[EviService] RAW message received from client ${userId}:`);
         if (!humeSocket) {
             try {
                 const config = JSON.parse(message);
@@ -154,9 +154,9 @@ const handleConnection = async (clientWs, userId) => {
 
                     humeSocket.on('message', (humeMessage) => {
                         const parsedMessage = JSON.parse(humeMessage);
-                        // Log the event to our database
+                        console.log(`[EviService] Message received from Hume for chat ${chatId}:`, humeMessage.toString());
                         logChatEvent(dbClient, chatId, parsedMessage);
-                        // Forward the message to the client
+                        console.log(`[EviService] Forwarding Hume message to client for chat ${chatId}.`);
                         if (clientWs.readyState === WebSocket.OPEN) {
                             clientWs.send(humeMessage.toString());
                         }
@@ -187,27 +187,28 @@ const handleConnection = async (clientWs, userId) => {
             return; // End processing for the config message
         }
 
-        // If the message is binary, it's audio data. Proxy it directly.
-        if (Buffer.isBuffer(message)) {
+        let command;
+        try {
+            command = JSON.parse(message.toString());
+        } catch (e) {
+            command = null;
+        }
+
+        if (command && command.type === 'user_input' && command.text) {
             if (humeSocket?.readyState === WebSocket.OPEN) {
+                console.log(`[EviService] Forwarding text input to Hume for chat ${chatId}: "${command.text}"`);
+                humeSocket.send(JSON.stringify({
+                    type: "user_input",
+                    text: command.text,
+                }));
+            }
+        } else if (Buffer.isBuffer(message)) {
+            if (humeSocket?.readyState === WebSocket.OPEN) {
+                console.log(`[EviService] Forwarding audio data to Hume for chat ${chatId}.`);
                 humeSocket.send(message);
             }
         } else {
-            // Otherwise, text input.
-            try {
-                const command = JSON.parse(message);
-                if (command.type === 'user_input' && command.text) {
-                    if (humeSocket?.readyState === WebSocket.OPEN) {
-                        // Forward the text input to Hume in the required format
-                        humeSocket.send(JSON.stringify({
-                            type: "user_input",
-                            text: command.text,
-                        }));
-                    }
-                }
-            } catch(e) {
-                console.warn("[EviService] Received invalid non-binary message:", message);
-            }
+            console.warn("[EviService] Received unhandled message type:", message.toString());
         }
     });
 

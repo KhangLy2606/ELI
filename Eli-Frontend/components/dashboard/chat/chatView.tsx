@@ -1,31 +1,41 @@
 "use client"
 
-import React, { useRef, useEffect } from "react";
-import { Sparkles, MessageCircle, AlertTriangle } from "lucide-react";
-import ChatBubble from "./chatBubble";
-import ChatInput from "./chatInput";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEviSocket, ChatMessage } from "@/hooks/useEviSocket";
-import { useAuthContext } from "@/context/authContext"; // Import the auth context
+import { useRef, useEffect, useState } from "react"
+import { Sparkles, Mic, Loader2 } from "lucide-react"
+
+import ChatBubble from "./chatBubble"
+import ChatInput from "./chatInput"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useEviSocket } from "@/hooks/useEviSocket"
+import { useAuthContext } from "@/context/authContext"
+import { useAudioRecorder } from "@/hooks/useAudioRecorder"
 
 export default function ChatView() {
-    const { user, isLoading: isAuthLoading } = useAuthContext(); // Get user data from context
+    const { selectedProfile, isLoading: isAuthLoading } = useAuthContext();
+    const [isRecording, setIsRecording] = useState(false);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-    // The EVI socket hook now gets the profileId directly from the authenticated user
+    // --- Main EVI Socket Connection (Now always in "voice" mode) ---
     const {
         chatHistory,
-        connectionState,
         isConnected,
         isAssistantSpeaking,
         error,
         sendTextInput,
+        sendAudioInput,
     } = useEviSocket({
-        profileId: user?.profileId ?? null, // Use the profileId from the context
-        modality: 'chat',
+        profileId: selectedProfile?.id ?? null,
+        configId: "43fe135b-3036-4233-b0e1-dd0fa1b66f7f",
     });
 
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    // --- Audio Recording Logic ---
+    const { startRecording, stopRecording } = useAudioRecorder((blob: Blob) => {
+        if (isConnected) {
+            sendAudioInput(blob);
+        }
+    });
 
+    // --- Auto-scroll Effect ---
     useEffect(() => {
         const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
         if (viewport) {
@@ -33,27 +43,16 @@ export default function ChatView() {
         }
     }, [chatHistory]);
 
-    // Show a loading screen while authentication is being checked
+    // --- UI State & Handlers ---
     if (isAuthLoading) {
         return (
-            <div className="flex items-center justify-center h-full">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex flex-col h-[calc(100vh-8rem)] max-w-4xl mx-auto items-center justify-center">
+                <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                <p className="text-gray-600 mt-2">Authenticating session...</p>
             </div>
         );
     }
 
-    // Show an error if no user is logged in
-    if (!user) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-center text-gray-600">
-                <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
-                <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
-                <p>Please log in to start a chat session.</p>
-            </div>
-        )
-    }
-
-    // --- The rest of your component remains largely the same ---
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)] max-w-4xl mx-auto">
             {/* Header */}
@@ -62,23 +61,30 @@ export default function ChatView() {
                     <div className="p-2 rounded-full bg-gradient-to-r from-yellow-400 to-pink-400">
                         <Sparkles className="h-5 w-5 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">Chat with <span className="bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">ELI</span></h1>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                        Chat with{" "}
+                        <span className="bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">ELI</span>
+                    </h1>
                 </div>
                 <p className="text-gray-600 text-sm">Your empathetic AI companion for emotional insights and support</p>
-                <p className={`text-xs mt-1 font-medium ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
-                    {error ? `Error: ${error}` : (isConnected ? 'Connected' : 'Disconnected')}
+                <p className={`text-xs mt-1 font-medium ${isConnected ? "text-green-600" : "text-red-600"}`}>
+                    {error ? `Error: ${error}` : isConnected ? "Connected" : "Disconnected"}
                 </p>
             </div>
 
-            {/* Chat Area */}
+            {/* Messages Area */}
             <div className="flex-1 relative">
                 <ScrollArea ref={scrollAreaRef} className="h-full">
                     <div className="px-4 pb-4">
                         {chatHistory.length === 0 && !isAssistantSpeaking ? (
                             <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                                <MessageCircle className="h-12 w-12 text-gray-400 mb-4" />
+                                <div className="p-4 rounded-full bg-gradient-to-r from-yellow-400/10 to-pink-400/10 mb-4">
+                                    <Mic className="h-12 w-12 text-gray-400" />
+                                </div>
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Start a conversation</h3>
-                                <p className="text-gray-600 text-sm max-w-md">I'm here to listen. Share what's on your mind.</p>
+                                <p className="text-gray-600 text-sm max-w-md">
+                                    I'm here to listen. Use the microphone to talk, or send a text message.
+                                </p>
                             </div>
                         ) : (
                             <div className="space-y-1">
@@ -98,8 +104,16 @@ export default function ChatView() {
                 </ScrollArea>
             </div>
 
-            {/* Input */}
-            <ChatInput onSendMessage={sendTextInput} isLoading={isAssistantSpeaking || !isConnected} />
+            {/* Input - Always shows voice input controls, but allows text sending */}
+            <ChatInput
+                mode={"voice"}
+                onSendMessage={sendTextInput}
+                isLoading={isAssistantSpeaking || !isConnected}
+                onStartRecording={() => { setIsRecording(true); startRecording(); }}
+                onStopRecording={() => { setIsRecording(false); stopRecording(); }}
+                onEndCall={() => { /* No-op, can be removed */ }}
+                isRecording={isRecording}
+            />
         </div>
-    );
+    )
 }

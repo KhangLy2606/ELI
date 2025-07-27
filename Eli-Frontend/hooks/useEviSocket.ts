@@ -1,8 +1,7 @@
 // hooks/useEviSocket.ts
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useAuthContext } from '@/context/authContext';
 
-
-// Represents a message displayed in the chat history UI
 export interface ChatMessage {
     role: "user" | "assistant";
     content: string;
@@ -10,210 +9,122 @@ export interface ChatMessage {
     emotions?: Record<string, number>;
 }
 
-// Represents the full spectrum of events from Hume, forwarded by our server
 export type HumeEvent = {
     type: string;
     [key: string]: any;
 };
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
-export type AuthStatus = 'pending' | 'success' | 'failed';
-export type Modality = 'chat' | 'voice';
-
-// --- Helper Functions (Token Handling) ---
-// TODO These can be moved to a separate utility file
-const decodeJwt = (token: string): { exp?: number } | null => {
-    try {
-        return JSON.parse(atob(token.split('.')[1]));
-    } catch (e) {
-        return null;
-    }
-};
-
-const isTokenExpired = (token: string, bufferSeconds: number = 60): boolean => {
-    const payload = decodeJwt(token);
-    if (!payload || typeof payload.exp !== 'number') return true;
-    return payload.exp < (Date.now() / 1000 + bufferSeconds);
-};
-
 
 interface UseEviSocketProps {
     profileId: string | null;
-    modality: Modality;       // The type of session ('chat' or 'voice')
-    onEvent?: (event: HumeEvent) => void; // Optional callback for raw Hume events
+    configId: string | null;
 }
 
-/**
- * A custom React hook to manage a WebSocket connection to the unified EVI service.
- * It handles authentication, the session handshake, and message routing.
- */
-export const useEviSocket = ({ profileId, modality, onEvent }: UseEviSocketProps) => {
+export const useEviSocket = ({ profileId, configId }: UseEviSocketProps) => {
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
     const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected');
-    const [authStatus, setAuthStatus] = useState<AuthStatus>('pending');
     const [error, setError] = useState<string | null>(null);
 
     const ws = useRef<WebSocket | null>(null);
-    const reconnectAttempts = useRef(0);
-    const isRefreshingToken = useRef(false);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const audioQueueRef = useRef<ArrayBuffer[]>([]);
+    const isPlayingRef = useRef(false);
 
-    // This function must now send a structured JSON message
-    const sendTextInput = useCallback((text: string) => {
-        if (ws.current?.readyState === WebSocket.OPEN) {
-            const message: HumeEvent = {
-                type: 'user_input',
-                text: text,
+    const { token } = useAuthContext();
+
+    const processAudioQueue = useCallback(() => {
+        if (isPlayingRef.current || audioQueueRef.current.length === 0 || !audioContextRef.current) {
+            return;
+        }
+        isPlayingRef.current = true;
+        const audioData = audioQueueRef.current.shift();
+        if (!audioData) {
+            isPlayingRef.current = false;
+            return;
+        }
+        audioContextRef.current.decodeAudioData(audioData, (buffer) => {
+            const source = audioContextRef.current.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContextRef.current.destination);
+            source.start(0);
+            source.onended = () => {
+                isPlayingRef.current = false;
+                processAudioQueue();
             };
-            ws.current.send(JSON.stringify(message));
-
-            // Add user's message to history immediately for a responsive UI
-            setChatHistory(prev => [...prev, {
-                role: 'user',
-                content: text,
-                timestamp: new Date()
-            }]);
-
-        } else {
-            console.error('EVI WebSocket not open. Cannot send message.');
-            setError('Connection is not active. Please wait or try reconnecting.');
-        }
-    }, []);
-
-    // New function for the voice interface to send audio data
-    const sendAudioInput = useCallback((audioData: Blob) => {
-        if (ws.current?.readyState === WebSocket.OPEN) {
-            ws.current.send(audioData);
-        }
+        }, (err) => {
+            console.error("Error decoding audio data", err);
+            isPlayingRef.current = false;
+            processAudioQueue();
+        });
     }, []);
 
     const connect = useCallback(async () => {
-        if (!profileId) {
-            // Don't attempt to connect if there's no active profile selected.
-            setAuthStatus('pending');
-            return;
+        if (!profileId || !configId || !token) return;
+        if (!audioContextRef.current) {
+            try {
+                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            } catch (e) {
+                console.error("AudioContext is not supported.", e);
+                setError("Audio playback is not supported.");
+                return;
+            }
         }
-
-        // Cleanup previous connection
-        ws.current?.close();
         setConnectionState('connecting');
-        let token = localStorage.getItem("token");
-
-        // Simple token refresh logic (can be expanded)
-        if (!token || isTokenExpired(token)) {
-            // TODO  robust token refresh mechanism here.
-            // For now, we'll just fail and prompt for re-login.
-            console.error("No valid auth token. User must log in again.");
-            setAuthStatus('failed');
-            setError('Your session has expired. Please log in again.');
-            return;
-        }
-
-        setAuthStatus('success');
-
-        const serverUrl = `ws://localhost:3001/ws?token=${encodeURIComponent(token)}`;
-        ws.current = new WebSocket(serverUrl);
-
+        setError(null);
+        ws.current = new WebSocket(`ws://localhost:3001/ws?token=${encodeURIComponent(token)}`);
         ws.current.onopen = () => {
-            console.log('[EVI Socket] Connection established. Sending start_session...');
-            // Send the start_session message after connecting.
-            const startMessage: HumeEvent = {
-                type: 'start_session',
-                payload: {
-                    profile_id: profileId,
-                    modality: modality,
-                }
-            };
+            const startMessage: HumeEvent = { type: 'start_session', payload: { profile_id: profileId, config_id: configId, modality: 'voice' } };
             ws.current?.send(JSON.stringify(startMessage));
         };
-
         ws.current.onmessage = (event) => {
-            const data: HumeEvent = JSON.parse(event.data);
-
-            // Optional: Allow parent component to react to any event
-            if (onEvent) {
-                onEvent(data);
+            if (event.data instanceof Blob) {
+                event.data.arrayBuffer().then(arrayBuffer => {
+                    audioQueueRef.current.push(arrayBuffer);
+                    processAudioQueue();
+                });
+                return;
             }
-
-            //  Handle various message types from the server.
-            switch (data.type) {
-                case 'session_ready':
-                    console.log(`[EVI Socket] Session is ready. Chat ID: ${data.chatId}`);
-                    setConnectionState('connected');
-                    reconnectAttempts.current = 0;
-                    setError(null);
-                    break;
-
-                case 'assistant_message':
-                    setChatHistory(prev => [...prev, {
-                        role: 'assistant',
-                        content: data.message.content,
-                        timestamp: new Date(),
-                        emotions: data.models?.prosody?.scores,
-                    }]);
-                    setIsAssistantSpeaking(true);
-                    break;
-
-                case 'assistant_end':
-                    setIsAssistantSpeaking(false);
-                    break;
-
-                case 'user_message':
-                    console.log('Hume confirmed user message:', data.message.content);
-                    break;
-
-                case 'user_interruption':
-                    console.log('User interrupted assistant.');
-                    setIsAssistantSpeaking(false);
-                    break;
-
-                case 'error':
-                    console.error('[EVI Socket] Received error from server:', data.message);
-                    setError(data.message || 'An unknown error occurred.');
-                    break;
-
-                // The voice UI will handle 'audio_output' via the onEvent callback
+            try {
+                const data: HumeEvent = JSON.parse(event.data);
+                switch (data.type) {
+                    case 'session_ready': setConnectionState('connected'); break;
+                    case 'assistant_message':
+                        if (data.message?.content) setChatHistory(prev => [...prev, { role: 'assistant', content: data.message.content, timestamp: new Date(), emotions: data.models?.prosody?.scores }]);
+                        setIsAssistantSpeaking(true);
+                        break;
+                    case 'assistant_end': setIsAssistantSpeaking(false); break;
+                    case 'error': setError(data.message || 'An unknown error occurred.'); break;
+                }
+            } catch (e) {
+                console.error('Failed to parse message:', e);
             }
         };
-
-        ws.current.onclose = (event) => {
-            console.log(`[EVI Socket] Connection closed. Code: ${event.code}`);
-            setConnectionState('disconnected');
-            if (event.code === 1008) { // Invalid Token
-                setError("Authentication failed. Please log in again.");
-                setAuthStatus('failed');
-            }
-        };
-
-        ws.current.onerror = () => {
-            console.error('[EVI Socket] WebSocket error occurred.');
-            setError('A connection error occurred.');
-            setConnectionState('error');
-        };
-
-    }, [profileId, modality, onEvent]);
+        ws.current.onclose = () => setConnectionState('disconnected');
+        ws.current.onerror = () => setConnectionState('error');
+    }, [profileId, configId, token, processAudioQueue]);
 
     useEffect(() => {
-        // Automatically connect when component mounts and has a profileId
         connect();
-        // Cleanup on unmount
-        return () => {
-            ws.current?.close();
-        };
+        return () => ws.current?.close();
     }, [connect]);
 
+    // ✅ FIX: Added `connectionState` as a dependency to prevent stale closures.
+    // Now, these functions will always have the correct, active WebSocket instance.
+    const sendTextInput = useCallback((text: string) => {
+        if (ws.current?.readyState === WebSocket.OPEN && connectionState === 'connected') {
+            const message: HumeEvent = { type: 'user_input', text };
+            ws.current.send(JSON.stringify(message));
+            setChatHistory(prev => [...prev, { role: 'user', content: text, timestamp: new Date() }]);
+        }
+    }, [connectionState]);
 
-    return {
-        // State
-        chatHistory,
-        connectionState,
-        isConnected: connectionState === 'connected',
-        authStatus,
-        isAssistantSpeaking,
-        error,
-        // Methods
-        sendTextInput,
-        sendAudioInput,
-        reconnect: connect, // Provide a manual reconnect function
-    };
+    const sendAudioInput = useCallback((audioData: Blob) => {
+        if (ws.current?.readyState === WebSocket.OPEN && connectionState === 'connected') {
+            ws.current.send(audioData);
+        }
+    }, [connectionState]);
+
+    return { chatHistory, isConnected: connectionState === 'connected', isAssistantSpeaking, error, sendTextInput, sendAudioInput };
 };
