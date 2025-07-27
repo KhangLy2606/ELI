@@ -17,7 +17,7 @@ import ChatView from "./chat"
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-        const [activeView, setActiveView] = useState("dashboard")
+    const [activeView, setActiveView] = useState("dashboard")
 
     // Add the new Chat item to the sidebar navigation
     const sidebarItems = [
@@ -55,7 +55,8 @@ export default function DashboardLayout() {
     }
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50">
+        // Set a fixed screen height and hide overflow on the main container.
+        <div className="relative h-screen overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50">
             {/* Mobile menu overlay */}
             {mobileMenuOpen && (
                 <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileMenuOpen(false)} />
@@ -207,10 +208,15 @@ export default function DashboardLayout() {
             </div>
 
             {/* Main Content */}
+            {/* This container is now a flex column that takes up the full screen height. */}
             <div
-                className={cn("min-h-screen transition-all duration-300 ease-in-out", sidebarOpen ? "md:pl-64" : "md:pl-0")}
+                className={cn(
+                    "flex h-screen flex-col transition-all duration-300 ease-in-out",
+                    sidebarOpen ? "md:pl-64" : "md:pl-0"
+                )}
             >
-                <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-gray-200/50 bg-white/90 px-4 backdrop-blur-md">
+                {/* The header is prevented from shrinking. */}
+                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b border-gray-200/50 bg-white/90 px-4 backdrop-blur-md">
                     <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(true)}>
                         <Menu className="h-5 w-5" />
                     </Button>
@@ -238,7 +244,8 @@ export default function DashboardLayout() {
                     </div>
                 </header>
 
-                <main className="flex-1 p-4 md:p-6">
+                {/* This main area will now scroll vertically if the content inside is too tall. */}
+                <main className="flex-1 overflow-y-auto p-4 md:p-6">
                     {/* Conditionally render the active view */}
                     <Suspense fallback={<div>Loading...</div>}>
                         {activeView === 'dashboard' && <DashboardScreen />}
