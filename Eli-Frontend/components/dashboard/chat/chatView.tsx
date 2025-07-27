@@ -1,19 +1,22 @@
 "use client"
 
 import { useRef, useEffect, useState } from "react"
-import { Sparkles, Mic, Loader2 } from "lucide-react"
+import { Sparkles, Mic, Loader2, Send } from "lucide-react"
 
 import ChatBubble from "./chatBubble"
-import ChatInput from "./chatInput"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { AutoResizeTextarea } from "@/components/ui/autoresize-text"
 import { useEviSocket } from "@/hooks/useEviSocket"
 import { useAuthContext } from "@/context/authContext"
 import { useAudioRecorder } from "@/hooks/useAudioRecorder"
+import { cn } from "@/lib/utils"
 
 export default function ChatView() {
     const { selectedProfile, isLoading: isAuthLoading } = useAuthContext();
     const [isRecording, setIsRecording] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const [textInput, setTextInput] = useState(""); // State for the text input
 
     const {
         chatHistory,
@@ -24,6 +27,7 @@ export default function ChatView() {
         sendAudioInput,
     } = useEviSocket({
         profileId: selectedProfile?.id ?? null,
+        // NOTE: Using a hardcoded configId as in the original file
         configId: "43fe135b-3036-4233-b0e1-dd0fa1b66f7f",
     });
 
@@ -41,6 +45,25 @@ export default function ChatView() {
             viewport.scrollTop = viewport.scrollHeight;
         }
     }, [chatHistory]);
+
+    // --- Text Input Handlers ---
+    const handleTextSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (textInput.trim() && !isLoading) {
+            sendTextInput(textInput.trim());
+            setTextInput("");
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleTextSubmit(e as unknown as React.FormEvent);
+        }
+    };
+
+    // --- Combined Loading State ---
+    const isLoading = isAssistantSpeaking || !isConnected;
 
     // --- UI State & Handlers ---
     if (isAuthLoading) {
@@ -103,16 +126,37 @@ export default function ChatView() {
                 </ScrollArea>
             </div>
 
-            {/* Input - Always shows voice input controls, but allows text sending */}
-            <ChatInput
-                mode={"voice"}
-                onSendMessage={sendTextInput}
-                isLoading={isAssistantSpeaking || !isConnected}
-                onStartRecording={() => { setIsRecording(true); startRecording(); }}
-                onStopRecording={() => { setIsRecording(false); stopRecording(); }}
-                onEndCall={() => { /* No-op, can be removed */ }}
-                isRecording={isRecording}
-            />
+            {/* --- Integrated Text and Voice Input Bar --- */}
+            <div className="border-t border-gray-200/50 bg-white/90 backdrop-blur-md p-4">
+                <div className="flex gap-3 items-end">
+                    {/* Text Input Form */}
+                    <form onSubmit={handleTextSubmit} className="flex-1 flex gap-3 items-end">
+                        <div className="flex-1 relative">
+                            <AutoResizeTextarea
+                                value={textInput}
+                                onChange={setTextInput}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Share what's on your mind..."
+                                className={cn(
+                                    "w-full rounded-2xl border border-gray-200/50 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm",
+                                    "placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
+                                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                                )}
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            size="icon"
+                            disabled={!textInput.trim() || isLoading}
+                            className="h-12 w-12 rounded-2xl bg-gradient-to-r from-yellow-400 to-pink-400 hover:from-yellow-500 hover:to-pink-500 text-white shadow-lg flex-shrink-0"
+                        >
+                            {isLoading && !isAssistantSpeaking ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                        </Button>
+                    </form>
+
+                </div>
+            </div>
         </div>
     )
 }
