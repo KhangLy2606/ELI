@@ -12,10 +12,10 @@ const parseHumeEventForDb = (humeMessage) => {
     const { type, message, models, tool_call, error } = humeMessage;
 
     // Determine the role of the event originator.
-    let role = humeMessage.role || 'system';
-    if (role === 'user' || role === 'assistant' || role === 'system' || role === 'tool') {
+    let role = humeMessage.role || 'USER';
+    if (role === 'USER' || role === 'assistant' ) {
     } else {
-        role = 'system';
+        role = 'USER';
     }
 
     // Map Hume event types to your database 'event_type_enum'.
@@ -134,7 +134,7 @@ const handleConnection = async (clientWs, userId) => {
 
                     chatId = (await dbClient.query(
                         `INSERT INTO chats (id, chat_group_id, profile_id, config_id, status, start_timestamp, custom_session_id, metadata)
-                         VALUES ($1, $2, $3, $4, 'started', NOW(), $5, $6) RETURNING id`,
+                         VALUES ($1, $2, $3, $4, 'ACTIVE', NOW(), $5, $6) RETURNING id`,
                         [uuidv4(), chatGroupId, profile_id, config_id, custom_session_id, { modality }]
                     )).rows[0].id;
 
@@ -225,7 +225,7 @@ const handleConnection = async (clientWs, userId) => {
             humeSocket.close();
         }
         if (chatId) {
-            await dbClient.query(`UPDATE chats SET status = 'completed', end_timestamp = NOW() WHERE id = $1`, [chatId])
+            await dbClient.query(`UPDATE chats SET status = 'COMPLETE', end_timestamp = NOW() WHERE id = $1`, [chatId])
                 .catch(err => console.error("[EviService] Error updating chat status:", err));
         }
         if (chatGroupId) {
